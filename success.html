@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #090909, #090909);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 340px;
+    }
+
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 15px;
+      animation: pop 0.4s ease;
+    }
+
+    .success-icon svg {
+      width: 60px;
+      height: 60px;
+      stroke: #22c55e;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      animation: draw 0.6s ease forwards;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes draw {
+      0% { stroke-dasharray: 0 100; }
+      100% { stroke-dasharray: 100 0; }
+    }
+
+    .amount {
+      font-size: 40px;
+      font-weight: bold;
+      color: #ffb703;
+      margin: 10px 0 15px;
+    }
+
+    h2 {
+      margin-bottom: 5px;
+      font-size: 22px;
+    }
+
+    .details p {
+      margin: 6px 0;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    /* ✅ Make the "Name" line bigger and bold */
+    .details .payment-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #e6e5e1;
+    }
+
+    button {
+      background: #14532d;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background: #0f3f23;
+    }
+
+    /* ✅ Logo section */
+    .logos {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .logos img {
+      width: 70px;
+      height: auto;
+      opacity: 0.9;
+      transition: transform 0.3s ease;
+    }
+
+    .logos img:hover {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+
+    .ad-banner {
+      background: linear-gradient(90deg, #2563eb, #3b82f6);
+      padding: 12px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+      margin-top: 15px;
+      text-align: center;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+
+    <h2>Payment Successful</h2>
+
+    <div class="amount" id="amountDisplay">₹0.00</div>
+
+    <div class="details" id="details">Loading...</div>
+
+    <button onclick="window.location.href='index.html'">DONE</button>
+
+    <!-- ✅ Logo Row (NPCI, UPI, Bank of Baroda) -->
+    <div class="logos">
+      <img src="npci.png" alt="NPCI Logo">
+      <img src="upi.png" alt="UPI Logo">
+      <img src="bob.png" alt="Bank of Baroda Logo">
+    </div>
+
+    <!-- Ad banner below logos -->
+    <div class="ad-banner" id="adBanner">
+      🎉 Get ₹25 Cashback on your next payment with FanPay!
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      const data = localStorage.getItem("paymentData");
+      if (!data) {
+        document.getElementById("details").innerHTML = "<p>No transaction found.</p>";
+        return;
+      }
+
+      const p = JSON.parse(data);
+
+      document.getElementById("amountDisplay").textContent = "₹" + p.amount;
+      document.getElementById("details").innerHTML = `
+        <p class="payment-name"><strong>Name:</strong> ${p.name}</p>
+        <p><strong>UPI ID:</strong> ${p.upi}</p>
+        <p><strong>Transaction ID:</strong> ${p.txid}</p>
+        <p><strong>UTR:</strong> ${p.utr || '—'}</p>
+        <p><strong>Date:</strong> ${p.date}</p>
+        <p><strong>Time:</strong> ${p.time}</p>
+      `;
+
+      const ads = [
+        "🎉 Get ₹25 Cashback on your next payment with FanPay!",
+        "🔥 Flat 10% off on Zomato orders using FanPay UPI!",
+        "💰 Send ₹500 or more & win ₹50 bonus instantly!",
+        "🎁 Invite friends and earn ₹30 cashback per referral!"
+      ];
+
+      let index = 0;
+      const adBanner = document.getElementById("adBanner");
+
+      setInterval(() => {
+        index = (index + 1) % ads.length;
+        adBanner.style.opacity = 0;
+        setTimeout(() => {
+          adBanner.textContent = ads[index];
+          adBanner.style.opacity = 1;
+        }, 400);
+      }, 3000);
+    };
+  </script>
+
+</body>
+</html>

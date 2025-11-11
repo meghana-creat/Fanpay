@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FanPay</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #eef4ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 400px;
+      text-align: center;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+    }
+
+    .success-icon {
+      background-color: #22c55e;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 15px;
+    }
+
+    .success-icon svg {
+      width: 45px;
+      height: 45px;
+      stroke: #fff;
+    }
+
+    h2 {
+     h2 {
+  color: #ee5311;
+  margin-bottom: 5px;
+  font-size: 26px;   /* increased from default */
+  font-weight: 600;
+}
+
+    }
+
+    p {
+      color: #555;
+      font-size: 14px;
+      margin: 0 0 20px;
+    }
+
+    .details {
+      background: #f4f7ff;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .details p {
+      margin: 6px 0;
+      font-size: 14px;
+    }
+
+    .details strong {
+      color: #111;
+    }
+
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      background-color: #eff0f2;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <img src="icons/logo.webp" alt="FanPay Logo">
+      <h1>FanPay</h1>
+    </div>
+
+    <div class="success-icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+
+    <h2>Payment Successful</h2>
+    <p>Transaction completed securely</p>
+
+    <div class="details">
+      <p><strong>Receiver:</strong> <span id="d_receiver">-</span></p>
+      <p><strong>UPI ID:</strong> <span id="d_upi">-</span></p>
+      <p><strong>Amount:</strong> ₹<span id="d_amount">-</span></p>
+      <p><strong>UTR:</strong> <span id="d_utr">-</span></p>
+      <p><strong>Transaction ID:</strong> <span id="d_Transactionid">-</span></p>
+      <p><strong>Date & Time:</strong> <span id="d_time">-</span></p>
+    </div>
+
+    <button onclick="window.location.href='fanpay_pwa_demo.html'">Done</button>
+  </div>
+
+  <script>
+    // ✅ Load transaction data from localStorage
+    const tx = JSON.parse(localStorage.getItem('lastPayment')) || {};
+
+    // Display values (manual inputs from previous page)
+    document.getElementById('d_receiver').textContent = tx.receiver || '-';
+    document.getElementById('d_upi').textContent = tx.upi || '-';
+    document.getElementById('d_amount').textContent = tx.amount || '-';
+
+    // ✅ Generate fake UTR, TxID, and timestamp
+    const utr = 'U' + Math.floor(100000000000 + Math.random() * 900000000000);
+    const transactionid = '' + Math.floor(1000000000000000 + Math.random() * 900000000000000);
+    const now = new Date().toLocaleString();
+
+    document.getElementById('d_utr').textContent = utr;
+    document.getElementById('d_transactionid').textContent = txid;
+    document.getElementById('d_time').textContent = now;
+  </script>
+</body>
+</html>

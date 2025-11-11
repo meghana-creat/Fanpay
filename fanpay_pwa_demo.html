@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FanPay</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #eef4ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      padding: 40px;
+      width: 500px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #ec6c0b;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background-color: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>💸 FanPay </h2>
+    <input type="text" id="receiver" placeholder="Receiver Name (e.g. gaana)">
+    <input type="text" id="upi" placeholder="UPI ID (e.g. 1354642154@upi)">
+    <input type="number" id="amount" placeholder="Enter Amount (e.g. 563)">
+    <button onclick="makePayment()">Pay Now</button>
+  </div>
+
+  <script>
+    function makePayment() {
+      const receiver = document.getElementById('receiver').value.trim();
+      const upi = document.getElementById('upi').value.trim();
+      const amount = document.getElementById('amount').value.trim();
+
+      if (!receiver || !upi || !amount) {
+        alert('Please fill in all fields!');
+        return;
+      }
+
+      // ✅ Save data to localStorage
+      const paymentData = { receiver, upi, amount };
+      localStorage.setItem('lastPayment', JSON.stringify(paymentData));
+
+      // ✅ Go to success page
+      window.location.href = 'fanpay.html';
+    }
+  </script>
+</body>
+</html>

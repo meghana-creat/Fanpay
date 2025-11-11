@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enter UPI PIN - FanPay</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #ffffff;
+      color: #1c1c1c;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      margin: 0;
+      padding-top: 40px;
+    }
+
+    /* ✅ Top Bar */
+    .top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: #003366;
+      color: #fff;
+    }
+
+    .top-bar img {
+      height: 30px;
+    }
+
+    .box {
+      text-align: center;
+      width: 320px;
+      margin-top: 40px;
+    }
+
+    h2 {
+      color: #003366;
+      margin-bottom: 10px;
+    }
+
+    .pin-container {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    input {
+      width: 60%;
+      margin: 15px 0;
+      padding: 10px;
+      border: none;
+      border-bottom: 2px solid #003366;
+      text-align: center;
+      font-size: 22px;
+      letter-spacing: 10px;
+      outline: none;
+      background: transparent;
+    }
+
+    .eye-icon {
+      position: absolute;
+      right: 60px;
+      top: 25px;
+      cursor: pointer;
+      font-size: 18px;
+      color: #003366;
+    }
+
+    /* ✅ Keypad */
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 30px auto;
+      width: 250px;
+    }
+
+    .keypad button {
+      background: #e6ebf5;
+      color: #003366;
+      border: none;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .keypad button:hover {
+      background: #cdd8f0;
+    }
+
+    /* ✅ Big Blue Verify Button */
+    .verify-btn {
+      background: #0055cc;
+      color: #18236e;
+      border: none;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .verify-btn:hover {
+      background: #0040a3;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ✅ Top Bar with UPI Logo -->
+  <div class="top-bar">
+    <h3>ENTER UPI PIN</h3>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="UPI Logo">
+  </div>
+
+  <div class="box">
+    <div class="pin-container">
+      <input type="password" id="pin" maxlength="4" placeholder="••••" readonly>
+      <span class="eye-icon" onclick="togglePIN()">👁️‍🗨️</span>
+    </div>
+
+    <div class="keypad">
+      <button onclick="addDigit(1)">1</button>
+      <button onclick="addDigit(2)">2</button>
+      <button onclick="addDigit(3)">3</button>
+      <button onclick="addDigit(4)">4</button>
+      <button onclick="addDigit(5)">5</button>
+      <button onclick="addDigit(6)">6</button>
+      <button onclick="addDigit(7)">7</button>
+      <button onclick="addDigit(8)">8</button>
+      <button onclick="addDigit(9)">9</button>
+        <button class="blue-btn" onclick="clearPin()">⌫</button>
+  <button class="blue-btn" onclick="addDigit(0)">0</button>
+  <button class="blue-btn" onclick="verifyPIN()">✔️</button>
+  </div>
+
+  <script>
+    function addDigit(num) {
+      const input = document.getElementById("pin");
+      if (input.value.length < 4) input.value += num;
+    }
+
+    function clearPin() {
+      const input = document.getElementById("pin");
+      input.value = input.value.slice(0, -1);
+    }
+
+    function togglePIN() {
+      const input = document.getElementById("pin");
+      input.type = input.type === "password" ? "text" : "password";
+    }
+
+    function verifyPIN() {
+      const pin = document.getElementById("pin").value.trim();
+      if (pin.length !== 4) {
+        alert("⚠️ Please enter your 4-digit PIN");
+        return;
+      }
+
+      const payment = JSON.parse(localStorage.getItem("paymentData"));
+      if (!payment) {
+        alert("⚠️ No payment found!");
+        return;
+      }
+
+      let history = JSON.parse(localStorage.getItem("paymentHistory")) || [];
+      history.push(payment);
+      localStorage.setItem("paymentHistory", JSON.stringify(history));
+
+      try {
+        if (navigator.vibrate) navigator.vibrate(100);
+      } catch(e) {}
+
+      window.location.href = "success.html";
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>FanPay — DEMO with QR Scan (NOT REAL)</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:18px;background:#f7f8fb}
+  .app{max-width:980px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 6px 22px rgba(20,20,30,0.06)}
+  h1{margin:0 0 8px;font-size:20px}
+  .notice{background:#fff3cd;border:1px solid #ffeeba;padding:10px;border-radius:6px;margin-bottom:12px;color:#856404}
+  .controls{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+  button.primary{background:#0b74ff;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+  button.ghost{background:#fff;border:1px solid #e5e7eb;padding:8px 12px;border-radius:8px;cursor:pointer}
+  .tx{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee}
+  .meta{font-size:13px;color:#6b7280}
+  .badge{background:#e6f0ff;color:#0b4aa2;padding:4px 8px;border-radius:999px;font-weight:600;font-size:12px}
+  .edit-btn{background:#0b74ff;color:#fff;border:none;padding:6px 10px;border-radius:8px;cursor:pointer}
+  .editor{background:#f9fafb;padding:12px;border-radius:8px;margin-top:10px;border:1px dashed #dbeafe}
+  input,textarea,select{width:100%;padding:8px;margin-top:6px;border:1px solid #d1d5db;border-radius:6px}
+  .row{display:flex;gap:12px}
+  .col{flex:1}
+  .small{font-size:12px;color:#6b7280}
+  #scannerArea{border:1px solid #e6eefc;padding:8px;border-radius:8px;background:#fbfdff}
+  #video{width:100%;height:auto;border-radius:6px;display:block}
+  canvas#qrCanvas{display:none}
+  .scan-info{display:flex;gap:12px;align-items:center}
+  .danger{color:#842029}
+</style>
+</head>
+<body>
+  <div class="app">
+    <h1>FanPay — DEMO Transaction Simulator (QR Scan) <span style="font-size:13px;color:#6b7280">(NOT REAL)</span></h1>
+    <div class="notice">
+      This is a local demo only. <strong>These transactions are fake and non-financial.</strong><br>
+      Do NOT use this to deceive anyone or to impersonate real bank records.
+    </div>
+
+    <div class="controls">
+      <button id="openScanner" class="primary">Scan QR (camera)</button>
+      <label class="ghost" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+        📁 Upload QR image
+        <input id="fileInput" type="file" accept="image/*" style="display:none">
+      </label>
+      <button id="stopScanner" class="ghost" style="display:none">Stop scanner</button>
+      <div style="margin-left:auto" class="small">Permission needed for camera access</div>
+    </div>
+
+    <div id="scannerArea" style="display:none">
+      <div style="display:flex;gap:12px">
+        <div style="flex:1">
+          <video id="video" autoplay muted playsinline></video>
+          <canvas id="qrCanvas"></canvas>
+        </div>
+        <div style="width:320px">
+          <div class="small"><strong>Scan result</strong></div>
+          <div id="scanResult" class="small" style="margin-top:8px;color:#0b4aa2">No code scanned yet.</div>
+          <div style="margin-top:12px">
+            <button id="addAsTxn" class="primary" style="display:none">Create demo transaction from QR</button>
+            <div style="margin-top:8px" class="small">If a UPI URI is detected, you'll be able to create a demo transaction pre-filled from it.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="txList"></div>
+
+    <template id="tx-template">
+      <div class="tx">
+        <div>
+          <div><strong class="displayReceiver"></strong> <span class="small meta">(<span class="displayUpi"></span>)</span></div>
+          <div class="meta small">Amount: <span class="displayAmount"></span> · Date: <span class="displayDate"></span></div>
+          <div class="meta small">UTR: <span class="utr"></span> · TX ID: <span class="txid"></span></div>
+        </div>
+        <div style="text-align:right">
+          <div class="badge">DEMO</div>
+          <div style="height:8px"></div>
+          <button class="edit-btn">Edit</button>
+        </div>
+      </div>
+    </template>
+
+    <div id="editorRoot"></div>
+  </div>
+
+<!-- jsQR library (used to decode QR from camera / image) -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
+<script>
+/* ==== Demo state & helpers (same model as before) ==== */
+
+// id helpers
+function randHex(len){ return Array.from(crypto.getRandomValues(new Uint8Array(len))).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,len) }
+function fakeUTR(){ return 'UTR'+Date.now().toString().slice(-6) + randHex(6).toUpperCase() }
+function fakeTxId(){ return 'TX'+randHex(10).toUpperCase() }
+
+// initial sample tx (if none in localStorage)
+const sampleTx = [
+  { tx_id: fakeTxId(), utr: fakeUTR(), vpa_from: 'alice@upi', vpa_to: 'bob@upi', amount: 249.00, created_at: new Date(Date.now()-86400*1000*2).toISOString(), note:'Official payload A' },
+  { tx_id: fakeTxId(), utr: fakeUTR(), vpa_from: 'me@upi', vpa_to: 'amazon@upi', amount: 999.00, created_at: new Date(Date.now()-86400*1000*7).toISOString(), note:'Official payload B' },
+  { tx_id: fakeTxId(), utr: fakeUTR(), vpa_from: 'me@upi', vpa_to: 'spotify@upi', amount: 89.50, created_at: new Date().toISOString(), note:'Official payload C' }
+];
+
+let transactions = JSON.parse(localStorage.getItem('fanpay_demo_tx') || 'null') || sampleTx;
+let metadata = JSON.parse(localStorage.getItem('fanpay_demo_meta') || '{}');
+
+function saveState(){
+  localStorage.setItem('fanpay_demo_tx', JSON.stringify(transactions));
+  localStorage.setItem('fanpay_demo_meta', JSON.stringify(metadata));
+}
+
+/* ==== UI rendering (same as before) ==== */
+function renderList(){
+  const root = document.getElementById('txList');
+  root.innerHTML = '';
+  const tmpl = document.getElementById('tx-template');
+  transactions.forEach(tx=>{
+    const node = tmpl.content.cloneNode(true);
+    node.querySelector('.displayReceiver').textContent = (metadata[tx.tx_id]?.display_receiver) || tx.vpa_to;
+    node.querySelector('.displayUpi').textContent = (metadata[tx.tx_id]?.display_upi) || tx.vpa_to;
+    node.querySelector('.displayAmount').textContent = '₹' + ((metadata[tx.tx_id]?.display_amount != null) ? metadata[tx.tx_id].display_amount.toFixed(2) : tx.amount.toFixed(2));
+    const d = new Date((metadata[tx.tx_id]?.display_datetime) || tx.created_at);
+    node.querySelector('.displayDate').textContent = d.toLocaleString();
+    node.querySelector('.utr').textContent = tx.utr;
+    node.querySelector('.txid').textContent = tx.tx_id;
+    const btn = node.querySelector('.edit-btn');
+    btn.addEventListener('click', ()=> openEditor(tx));
+    root.appendChild(node);
+  });
+}
+
+/* ==== Editor (same as previous demo) ==== */
+function openEditor(tx){
+  const root = document.getElementById('editorRoot');
+  const md = metadata[tx.tx_id] || {};
+  root.innerHTML = `
+    <div class="editor">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><strong>Edit presentation for:</strong> <span style="font-weight:600">${tx.tx_id}</span></div>
+        <div class="small">Original amount: ₹${tx.amount.toFixed(2)}</div>
+      </div>
+      <div style="margin-top:8px" class="small">Original UPI: ${tx.vpa_to} · Original date: ${new Date(tx.created_at).toLocaleString()}</div>
+
+      <div style="margin-top:10px" class="row">
+        <div class="col">
+          <label class="small">Display receiver name</label>
+          <input id="fld_receiver" value="${escapeHtml(md.display_receiver || '')}" placeholder="${tx.vpa_to}">
+        </div>
+        <div class="col">
+          <label class="small">Display UPI (for show)</label>
+          <input id="fld_upi" value="${escapeHtml(md.display_upi || '')}" placeholder="${tx.vpa_to}">
+        </div>
+      </div>
+
+      <div style="margin-top:10px" class="row">
+        <div class="col">
+          <label class="small">Display amount (for budgeting / label)</label>
+          <input id="fld_amount" type="number" step="0.01" value="${md.display_amount != null ? md.display_amount : ''}" placeholder="${tx.amount}">
+        </div>
+        <div class="col">
+          <label class="small">Display date/time</label>
+          <input id="fld_date" type="datetime-local" value="${md.display_datetime ? formatLocalInput(md.display_datetime) : ''}">
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label class="small">Note (editable)</label>
+        <textarea id="fld_note" rows="2" placeholder="Personal note...">${escapeHtml(md.note || '')}</textarea>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button id="saveBtn" class="edit-btn">Save (local demo)</button>
+        <button id="clearBtn" style="background:#e5e7eb;border:none;padding:6px 10px;border-radius:8px;cursor:pointer">Reset display overrides</button>
+        <button id="closeBtn" style="margin-left:auto;background:#fff;border:1px solid #e5e7eb;padding:6px 10px;border-radius:8px;cursor:pointer">Close</button>
+      </div>
+
+      <div style="margin-top:8px" class="small">Note: All changes are stored locally in your browser. These are <strong>display-only overrides</strong> and do not affect any bank data.</div>
+    </div>
+  `;
+
+  document.getElementById('saveBtn').addEventListener('click', ()=>{
+    const dd = document.getElementById('fld_date').value;
+    const newMd = {
+      display_receiver: document.getElementById('fld_receiver').value.trim() || undefined,
+      display_upi: document.getElementById('fld_upi').value.trim() || undefined,
+      display_amount: document.getElementById('fld_amount').value ? parseFloat(document.getElementById('fld_amount').value) : undefined,
+      display_datetime: dd ? new Date(dd).toISOString() : undefined,
+      note: document.getElementById('fld_note').value || undefined,
+      last_edited_at: new Date().toISOString()
+    };
+    Object.keys(newMd).forEach(k=> newMd[k]===undefined && delete newMd[k]);
+    metadata[tx.tx_id] = newMd;
+    saveState();
+    renderList();
+    openEditor(tx);
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    delete metadata[tx.tx_id];
+    saveState();
+    renderList();
+    openEditor(tx);
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', ()=>{ root.innerHTML=''; });
+}
+
+/* ==== QR scanning logic (camera + image fallback) ==== */
+
+const video = document.getElementById('video');
+const canvas = document.getElementById('qrCanvas');
+const ctx = canvas.getContext('2d');
+let scanning = false;
+let stream = null;
+let scanInterval = null;
+let lastScannedText = null;
+
+document.getElementById('openScanner').addEventListener('click', async ()=>{
+  document.getElementById('scannerArea').style.display = 'block';
+  document.getElementById('openScanner').style.display = 'none';
+  document.getElementById('stopScanner').style.display = '';
+  await startCameraAndScan();
+});
+
+document.getElementById('stopScanner').addEventListener('click', ()=>{
+  stopCamera();
+  document.getElementById('scannerArea').style.display = 'none';
+  document.getElementById('openScanner').style.display = '';
+  document.getElementById('stopScanner').style.display = 'none';
+  document.getElementById('scanResult').textContent = 'No code scanned yet.';
+  lastScannedText = null;
+  document.getElementById('addAsTxn').style.display = 'none';
+});
+
+document.getElementById('fileInput').addEventListener('change', async (ev)=>{
+  const f = ev.target.files[0];
+  if (!f) return;
+  const img = await loadImageFromFile(f);
+  canvas.width = img.width; canvas.height = img.height;
+  ctx.drawImage(img,0,0);
+  const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const code = jsQR(imageData.data, imageData.width, imageData.height);
+  if (code){
+    handleScannedText(code.data);
+  } else {
+    document.getElementById('scanResult').textContent = 'No QR code found in image.';
+  }
+  ev.target.value = '';
+});
+
+/* start camera and perform repeated scans */
+async function startCameraAndScan(){
+  scanning = true;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+  } catch (err) {
+    document.getElementById('scanResult').textContent = 'Camera access denied or not available.';
+    return;
+  }
+  video.srcObject = stream;
+  await video.play();
+
+  // set canvas same size
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+
+  scanInterval = setInterval(()=>{
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    if (code && code.data){
+      // avoid repeated identical detections
+      if (code.data !== lastScannedText){
+        lastScannedText = code.data;
+        handleScannedText(code.data);
+      }
+    }
+  }, 250);
+}
+
+function stopCamera(){
+  scanning = false;
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+  if (stream){
+    stream.getTracks().forEach(t=>t.stop());
+    stream = null;
+  }
+  video.pause();
+  video.srcObject = null;
+}
+
+/* parse qr text and decide if it's a UPI URI */
+function handleScannedText(text){
+  document.getElementById('scanResult').textContent = text;
+  const parsed = parseUpiUri(text);
+  if (parsed){
+    document.getElementById('scanResult').innerHTML = '<strong>UPI QR detected</strong><br>' +
+      'pa: ' + (parsed.pa || '-') + '<br>' +
+      'pn: ' + (parsed.pn || '-') + '<br>' +
+      (parsed.am ? ('amount: ₹' + parsed.am) : '') ;
+    const btn = document.getElementById('addAsTxn');
+    btn.style.display = '';
+    btn.onclick = ()=>{
+      createTxnFromUpi(parsed);
+      // optionally stop scanner
+      // stopCamera();
+      btn.style.display = 'none';
+    };
+  } else {
+    document.getElementById('addAsTxn').style.display = 'none';
+  }
+}
+
+/* create a demo transaction using parsed UPI fields */
+function createTxnFromUpi(upi){
+  const nowIso = new Date().toISOString();
+  const newTx = {
+    tx_id: fakeTxId(),
+    utr: fakeUTR(),
+    vpa_from: 'demo-sender@upi',
+    vpa_to: upi.pa || 'unknown@upi',
+    amount: upi.am ? parseFloat(upi.am) : 0.00,
+    created_at: nowIso,
+    note: 'Created from scanned QR (DEMO)'
+  };
+  transactions.unshift(newTx); // add to top
+  saveState();
+  renderList();
+  openEditor(newTx); // open editor so user can tweak display fields
+}
+
+/* parse UPI URI like upi://pay?pa=merchant@upi&pn=Name&am=123.45&tn=note */
+function parseUpiUri(text){
+  try {
+    // some QR tools encode UPI as "upi://pay?..." or "upi://pay?key=..." or plain "pa=...&pn=..."
+    const lower = text.trim();
+    let query = '';
+    if (lower.toLowerCase().startsWith('upi://')) {
+      const idx = text.indexOf('?');
+      if (idx >= 0) query = text.slice(idx+1);
+    } else if (lower.includes('pa=') || lower.includes('pn=')) {
+      // assume it's a bare query string
+      query = text;
+    } else {
+      return null;
+    }
+    const params = {};
+    query.split('&').forEach(pair=>{
+      const [k,v] = pair.split('=');
+      if (k) params[decodeURIComponent(k)] = v ? decodeURIComponent(v) : '';
+    });
+    // return relevant params
+    return { pa: params.pa || params.PA, pn: params.pn || params.PN, am: params.am || params.AM, tn: params.tn || params.TN };
+  } catch (e){
+    return null;
+  }
+}
+
+/* file image loader */
+function loadImageFromFile(file){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{ URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = (e)=>{ URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
+  });
+}
+
+/* ==== misc helpers ==== */
+function escapeHtml(s){ return (s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }
+function formatLocalInput(iso){ if(!iso) return ''; const d=new Date(iso); const tzoffset = d.getTimezoneOffset()*60000; const local = new Date(d - tzoffset); return local.toISOString().slice(0,16); }
+
+/* ==== init ==== */
+renderList();
+
+/* cleanup on page unload */
+window.addEventListener('beforeunload', ()=>{ stopCamera(); });
+
+</script>
+</body>
+</html>

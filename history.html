@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction History</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f0f9ff;
+      color: #111;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #0D47A1;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+    th {
+      background: #0D47A1;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #e3f2fd;
+    }
+    .btn-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+    button {
+      background: #0D47A1;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #09347a;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📜 Transaction History</h2>
+  <table id="historyTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>UPI ID</th>
+        <th>Amount</th>
+        <th>Transaction ID</th>
+        <th>Date</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="btn-container">
+    <button onclick="window.location.href='index.html'">⬅️ Back to Payment</button>
+    <button onclick="clearHistory()">🗑️ Clear All Transactions</button>
+  </div>
+
+  <script>
+    // ✅ Load saved transactions
+    const history = JSON.parse(localStorage.getItem("paymentHistory") || "[]");
+    const tbody = document.querySelector("#historyTable tbody");
+
+    function renderTable() {
+      tbody.innerHTML = "";
+      if (history.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6'>No transactions yet</td></tr>";
+      } else {
+        history.slice().reverse().forEach(tx => {
+          const row = `<tr>
+            <td>${tx.name}</td>
+            <td>${tx.upi}</td>
+            <td>₹${tx.amount}</td>
+            <td>${tx.txid}</td>
+            <td>${tx.date}</td>
+            <td>${tx.time}</td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+      }
+    }
+
+    renderTable();
+
+    // ✅ Clear all stored transactions
+    function clearHistory() {
+      if (confirm("Are you sure you want to delete all transactions?")) {
+        localStorage.removeItem("paymentHistory");
+        alert("All transaction history cleared!");
+        window.location.reload();
+      }
+    }
+  </script>
+
+</body>
+</html>
