@@ -2,9 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Enter UPI PIN - FanPay</title>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Poppins', sans-serif;
       background: #ffffff;
@@ -13,9 +18,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
-      padding-top: 40px;
+      padding: 0;
+      overflow-x: hidden;
     }
 
     /* ✅ Top Bar */
@@ -24,26 +30,32 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 20px;
+      padding: 12px 18px;
       background: #003366;
       color: #fff;
+      position: sticky;
+      top: 0;
     }
 
     .top-bar img {
-      height: 30px;
+      height: 26px;
     }
 
+    /* ✅ Main Box */
     .box {
       text-align: center;
-      width: 320px;
-      margin-top: 40px;
+      width: 90%;
+      max-width: 360px;
+      margin-top: 50px;
     }
 
     h2 {
       color: #003366;
       margin-bottom: 10px;
+      font-size: 20px;
     }
 
+    /* ✅ PIN input area */
     .pin-container {
       position: relative;
       display: flex;
@@ -52,9 +64,9 @@
     }
 
     input {
-      width: 60%;
-      margin: 15px 0;
-      padding: 10px;
+      width: 70%;
+      margin: 20px 0;
+      padding: 10px 0;
       border: none;
       border-bottom: 2px solid #003366;
       text-align: center;
@@ -66,8 +78,8 @@
 
     .eye-icon {
       position: absolute;
-      right: 60px;
-      top: 25px;
+      right: 12%;
+      top: 22px;
       cursor: pointer;
       font-size: 18px;
       color: #003366;
@@ -77,9 +89,10 @@
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin: 30px auto;
-      width: 250px;
+      gap: 14px;
+      margin: 35px auto 10px;
+      width: 100%;
+      max-width: 260px;
     }
 
     .keypad button {
@@ -92,33 +105,38 @@
       font-size: 22px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s ease;
     }
 
     .keypad button:hover {
       background: #cdd8f0;
     }
 
-    /* ✅ Big Blue Verify Button */
-    .verify-btn {
-      background: #0055cc;
-      color: #18236e;
-      border: none;
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      font-size: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+    /* ✅ Colored Buttons */
+    .blue-btn {
+      background: #165391;
+      color: #fff;
+      font-size: 24px;
     }
 
-    .verify-btn:hover {
-      background: #0040a3;
-      transform: scale(1.05);
+    .blue-btn:hover {
+      background: #003f73;
+    }
+
+    /* ✅ Responsive fix */
+    @media (max-width: 420px) {
+      .keypad button {
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+      }
+      input {
+        width: 80%;
+        font-size: 20px;
+      }
+      .eye-icon {
+        right: 10%;
+      }
     }
   </style>
 </head>
@@ -133,7 +151,7 @@
   <div class="box">
     <div class="pin-container">
       <input type="password" id="pin" maxlength="4" placeholder="••••" readonly>
-      <span class="eye-icon" onclick="togglePIN()">👁️‍🗨️</span>
+      <span class="eye-icon" onclick="togglePIN()">👁️</span>
     </div>
 
     <div class="keypad">
@@ -146,9 +164,10 @@
       <button onclick="addDigit(7)">7</button>
       <button onclick="addDigit(8)">8</button>
       <button onclick="addDigit(9)">9</button>
-        <button class="blue-btn" onclick="clearPin()">⌫</button>
-  <button class="blue-btn" onclick="addDigit(0)">0</button>
-  <button class="blue-btn" onclick="verifyPIN()">✔️</button>
+      <button class="blue-btn" onclick="clearPin()">⌫</button>
+      <button onclick="addDigit(0)">0</button>
+      <button class="blue-btn" onclick="verifyPIN()">✔️</button>
+    </div>
   </div>
 
   <script>
@@ -184,9 +203,7 @@
       history.push(payment);
       localStorage.setItem("paymentHistory", JSON.stringify(history));
 
-      try {
-        if (navigator.vibrate) navigator.vibrate(100);
-      } catch(e) {}
+      if (navigator.vibrate) navigator.vibrate(100);
 
       window.location.href = "success.html";
     }

@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #090909, #090909);
+      background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
       color: white;
       display: flex;
       flex-direction: column;
@@ -18,12 +18,13 @@
     }
 
     .card {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.07);
       padding: 30px;
       border-radius: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
       text-align: center;
       width: 340px;
+      max-width: 90%;
     }
 
     .success-icon {
@@ -59,16 +60,16 @@
       100% { stroke-dasharray: 100 0; }
     }
 
+    h2 {
+      margin-bottom: 5px;
+      font-size: 22px;
+    }
+
     .amount {
       font-size: 40px;
       font-weight: bold;
       color: #ffb703;
       margin: 10px 0 15px;
-    }
-
-    h2 {
-      margin-bottom: 5px;
-      font-size: 22px;
     }
 
     .details p {
@@ -77,7 +78,6 @@
       color: #fff;
     }
 
-    /* ✅ Make the "Name" line bigger and bold */
     .details .payment-name {
       font-size: 20px;
       font-weight: bold;
@@ -100,27 +100,32 @@
       background: #0f3f23;
     }
 
-    /* ✅ Logo section */
+    /* ✅ Logos Section */
     .logos {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 15px;
       margin-top: 20px;
+      flex-wrap: wrap;
     }
 
     .logos img {
-      width: 70px;
+      width: 75px;
       height: auto;
-      opacity: 0.9;
-      transition: transform 0.3s ease;
+      background: #fff;
+      border-radius: 10px;
+      padding: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     .logos img:hover {
-      transform: scale(1.1);
-      opacity: 1;
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(255,255,255,0.2);
     }
 
+    /* ✅ Ad banner */
     .ad-banner {
       background: linear-gradient(90deg, #2563eb, #3b82f6);
       padding: 12px;
@@ -139,6 +144,43 @@
     @keyframes fadeIn {
       0% { opacity: 0; transform: translateY(10px); }
       100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ✅ Mobile Responsive */
+    @media (max-width: 480px) {
+      .card {
+        width: 92%;
+        padding: 22px;
+      }
+
+      .success-icon {
+        width: 80px;
+        height: 80px;
+      }
+
+      .success-icon svg {
+        width: 45px;
+        height: 45px;
+      }
+
+      .amount {
+        font-size: 32px;
+      }
+
+      .logos img {
+        width: 60px;
+        padding: 5px;
+      }
+
+      button {
+        width: 100%;
+        font-size: 14px;
+      }
+
+      .ad-banner {
+        font-size: 13px;
+        padding: 10px;
+      }
     }
   </style>
 </head>
@@ -159,14 +201,15 @@
 
     <button onclick="window.location.href='index.html'">DONE</button>
 
-    <!-- ✅ Logo Row (NPCI, UPI, Bank of Baroda) -->
+    <!-- ✅ Realistic Official Logos -->
     <div class="logos">
       <img src="npci.png" alt="NPCI Logo">
-      <img src="upi.png" alt="UPI Logo">
-      <img src="bob.png" alt="Bank of Baroda Logo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="UPI Logo">
+                  <img src="bob.png" alt="Bank of Baroda Logo">
+
     </div>
 
-    <!-- Ad banner below logos -->
+    <!-- ✅ Ad banner -->
     <div class="ad-banner" id="adBanner">
       🎉 Get ₹25 Cashback on your next payment with FanPay!
     </div>

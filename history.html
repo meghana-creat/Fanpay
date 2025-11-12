@@ -2,41 +2,92 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transaction History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>📜 Transaction History - FanPay</title>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Poppins', sans-serif;
-      background: #f0f9ff;
+      background: linear-gradient(135deg, #dceeff, #f6f9ff);
       color: #111;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
+
+    /* ✅ Top Bar */
+    .top-bar {
+      width: 100%;
+      background: #003366;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .top-bar img {
+      height: 28px;
+    }
+
     h2 {
       text-align: center;
       color: #0D47A1;
+      margin: 20px 0 10px;
+      font-size: 22px;
     }
+
+    /* ✅ Table styling */
+    .table-container {
+      width: 95%;
+      max-width: 700px;
+      overflow-x: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
     }
+
     th, td {
       border: 1px solid #ccc;
       padding: 10px;
       text-align: center;
       font-size: 14px;
+      word-wrap: break-word;
     }
+
     th {
       background: #0D47A1;
       color: white;
+      font-size: 15px;
     }
+
     tr:nth-child(even) {
       background: #e3f2fd;
     }
+
+    /* ✅ Buttons */
     .btn-container {
       text-align: center;
-      margin-top: 20px;
+      margin: 20px 0 30px;
     }
+
     button {
       background: #0D47A1;
       color: white;
@@ -45,32 +96,60 @@
       border-radius: 10px;
       cursor: pointer;
       margin: 5px;
+      font-weight: 500;
+      font-size: 15px;
+      transition: background 0.3s;
     }
+
     button:hover {
       background: #09347a;
     }
+
+    /* ✅ Responsive */
+    @media (max-width: 480px) {
+      h2 {
+        font-size: 18px;
+      }
+      th, td {
+        font-size: 12px;
+        padding: 8px;
+      }
+      button {
+        padding: 8px 15px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
+
 <body>
+  <!-- ✅ Top Bar -->
+  <div class="top-bar">
+    <h3>FanPay History</h3>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="UPI Logo">
+  </div>
 
   <h2>📜 Transaction History</h2>
-  <table id="historyTable">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>UPI ID</th>
-        <th>Amount</th>
-        <th>Transaction ID</th>
-        <th>Date</th>
-        <th>Time</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+
+  <div class="table-container">
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>UPI ID</th>
+          <th>Amount</th>
+          <th>Transaction ID</th>
+          <th>Date</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <div class="btn-container">
-    <button onclick="window.location.href='index.html'">⬅️ Back to Payment</button>
-    <button onclick="clearHistory()">🗑️ Clear All Transactions</button>
+    <button onclick="window.location.href='index.html'">⬅️ Back</button>
+    <button onclick="clearHistory()">🗑️ Clear All</button>
   </div>
 
   <script>
@@ -84,14 +163,15 @@
         tbody.innerHTML = "<tr><td colspan='6'>No transactions yet</td></tr>";
       } else {
         history.slice().reverse().forEach(tx => {
-          const row = `<tr>
-            <td>${tx.name}</td>
-            <td>${tx.upi}</td>
-            <td>₹${tx.amount}</td>
-            <td>${tx.txid}</td>
-            <td>${tx.date}</td>
-            <td>${tx.time}</td>
-          </tr>`;
+          const row = `
+            <tr>
+              <td>${tx.name}</td>
+              <td>${tx.upi}</td>
+              <td>₹${tx.amount}</td>
+              <td>${tx.txid}</td>
+              <td>${tx.date}</td>
+              <td>${tx.time}</td>
+            </tr>`;
           tbody.innerHTML += row;
         });
       }
