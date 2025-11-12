@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FanPay</title>
+
+  <!-- ✅ Add manifest and service worker registration -->
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log("✅ Service Worker registered"))
+        .catch(err => console.log("❌ Service Worker failed:", err));
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #b0b3b5, #b4babc);
+      color: rgb(49, 41, 41);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .box {
+      background: rgba(242, 238, 238, 0.2);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 320px;
+      backdrop-filter: blur(6px);
+    }
+    h2 { color: #0f3360; }
+    input {
+      width: 90%;
+      margin: 10px 0;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+    button {
+      background: #165391;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+    button:hover { background: #0f3f70; }
+
+    /* ✅ Logo bar styling */
+    .logo-bar {
+      position: absolute;
+      top: 20px;
+      text-align: center;
+      width: 100%;
+    }
+    .logo-bar img {
+      height: 40px;
+      margin: 0 10px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ✅ Logo Section -->
+  <div class="logo-bar">
+    
+    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="UPI Logo">
+
+  </div>
+
+  <div class="box">
+    <h2>💸 FanPay</h2>
+    <input type="text" id="name" placeholder="Enter Name"><br>
+    <input type="text" id="upi" placeholder="Enter UPI ID"><br>
+    <input type="number" id="amount" placeholder="Enter Amount"><br>
+    <button onclick="payNow()">Pay Now</button>
+    <br><br>
+    <button onclick="viewHistory()" style="background:#555;">📜 View History</button>
+  </div>
+
+  <script>
+    // ✅ Generate Transaction ID
+    function generateTxID() {
+      const now = new Date();
+      const datePart = now.toISOString().slice(0,10).replace(/-/g,"");
+      const randomPart = Math.floor(100000 + Math.random() * 900000);
+      return `T${datePart}${randomPart}`;
+    }
+
+    // ✅ Generate 12-digit UTR ID
+    function generateUTR() {
+      return Math.floor(100000000000 + Math.random() * 900000000000).toString();
+    }
+
+    function payNow() {
+      const name = document.getElementById("name").value.trim();
+      const upi = document.getElementById("upi").value.trim();
+      const amount = document.getElementById("amount").value.trim();
+
+      if (!name || !upi || !amount) {
+        alert("⚠️ Please fill all details before proceeding!");
+        return;
+      }
+
+      const txid = generateTxID();
+      const utr = generateUTR(); // ✅ Added UTR
+      const now = new Date();
+      const date = now.toLocaleDateString();
+      const time = now.toLocaleTimeString();
+
+      const newPayment = { name, upi, amount, txid, utr, date, time };
+
+      // ✅ Save in transaction history
+      let history = JSON.parse(localStorage.getItem("paymentHistory")) || [];
+      history.push(newPayment);
+      localStorage.setItem("paymentHistory", JSON.stringify(history));
+
+      // ✅ Save current payment
+      localStorage.setItem("paymentData", JSON.stringify(newPayment));
+
+      // ✅ Feedback
+      try {
+        if (navigator.vibrate) navigator.vibrate(100);
+        const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+        audio.play();
+      } catch (e) {}
+
+    
+
+      setTimeout(() => {
+        window.location.href = "pin.html";
+      }, 500);
+    }
+
+    function viewHistory() {
+      window.location.href = "history.html";
+    }
+  </script>
+
+</body>
+</html>
